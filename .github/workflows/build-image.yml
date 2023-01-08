@@ -28,7 +28,7 @@ jobs:
           fi
           echo "alias_tags=${alias_tags[*]}" >> $GITHUB_OUTPUT
           
-      - id: build
+      - id: build_image
         uses: redhat-actions/buildah-build@v2
         with:
           image: ${{ env.IMAGE_NAME }}
