@@ -27,6 +27,7 @@ jobs:
             alias_tags+=("latest")
           fi
           echo "alias_tags=${alias_tags[*]}" >> $GITHUB_OUTPUT
+          
       - id: build
         uses: redhat-actions/buildah-build@v2
         with:
@@ -37,14 +38,30 @@ jobs:
             ${{ steps.tags.outputs.sha_short }}
           containerfiles: |
             ./Containerfile
-      - id: push
-        uses: redhat-actions/push-to-registry@v2
+            
+      # Workaround bug where capital letters in your GitHub user name make it impossible to push to GHCR.
+      # https://github.com/macbre/push-to-ghcr/issues/12
+      - name: Lowercase Registry
+        id: registry_case
+        uses: ASzc/change-string-case-action@v5
         with:
-          image: ${{ steps.build.outputs.image }}
-          tags: ${{ steps.build.outputs.tags }}
-          registry: ${{ env.IMAGE_REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ github.token }}
+          string: ${{ env.IMAGE_REGISTRY }}
 
-      - name: Print image url
-        run: echo "Image pushed to ${{ steps.push.outputs.registry-paths }}"
+      # Push the image to GHCR (Image Registry)
+      - name: Push To GHCR
+        uses: redhat-actions/push-to-registry@v2
+        id: push
+        env:
+          REGISTRY_USER: ${{ github.actor }}
+          REGISTRY_PASSWORD: ${{ github.token }}
+        with:
+          image: ${{ steps.build_image.outputs.image }}
+          tags: ${{ steps.build_image.outputs.tags }}
+          registry: ${{ steps.registry_case.outputs.lowercase }}
+          username: ${{ env.REGISTRY_USER }}
+          password: ${{ env.REGISTRY_PASSWORD }}
+          extra-args: |
+            --disable-content-trust
+      - name: Echo outputs
+        run: |
+          echo "${{ toJSON(steps.push.outputs) }}"
