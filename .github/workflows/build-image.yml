@@ -30,7 +30,6 @@ jobs:
       - id: build
         uses: redhat-actions/buildah-build@v2
         with:
-          context: ${{ env.IMAGE_NAME }}
           image: ${{ env.IMAGE_NAME }}
           tags: |
             ${{ steps.tags.outputs.alias_tags }}
