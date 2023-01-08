@@ -1,6 +1,6 @@
 FROM registry.fedoraproject.org/fedora:37
 
-RUN dnf upgrade --refresh
+RUN dnf upgrade --refresh -y
 
 RUN dnf install -y \
     @"Development Tools" \
